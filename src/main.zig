@@ -45,8 +45,8 @@ test "pass wrong allocator" {
 // }
 
 test "twick array list" {
-    var debugAllocator = std.heap.DebugAllocator(.{}).init;
-    const allocator = debugAllocator.allocator();
+    var debug_allocator = std.heap.DebugAllocator(.{}).init;
+    const allocator = debug_allocator.allocator();
     var array_list = try std.ArrayList(u8).initCapacity(allocator, 100);
     defer array_list.deinit(allocator);
 
@@ -55,8 +55,23 @@ test "twick array list" {
     try array_list.append(allocator, 'l');
     try array_list.append(allocator, 'l');
     try array_list.append(allocator, 'o');
-    try array_list.append(allocator, ' ');
     try array_list.appendSlice(allocator, "world");
+    try array_list.insert(allocator, 5, ' ');
+    try array_list.insertSlice(allocator, 0, "this is ");
+}
 
-    std.debug.print("this is {s}\n", .{array_list.items});
+test "twich hash map" {
+    var debug_allocator = std.heap.DebugAllocator(.{}).init;
+    const allocator = debug_allocator.allocator();
+    var hash_table = std.hash_map.AutoHashMap(u32, u16).init(allocator);
+    defer hash_table.deinit();
+
+    try hash_table.put(123, 1);
+    try hash_table.put(124, 2);
+    try hash_table.put(125, 3);
+
+    var iterator = hash_table.iterator();
+    while (iterator.next()) |entry| {
+        std.debug.print("key: {any}, value: {any}\n", .{ entry.key_ptr.*, entry.value_ptr.* });
+    }
 }
