@@ -2,19 +2,23 @@ const std = @import("std");
 const expect = std.testing.expect;
 const Allocator = std.mem.Allocator;
 
-pub fn main() !void {}
+var count: usize = 0;
 
-test "open dir and iterate to print name" {
-    std.testing.log_level = .debug;
-    const io = std.testing.io;
-
-    const cwd = std.Io.Dir.cwd();
-    const src_dir = try cwd.openDir(io, "./src", .{ .iterate = true });
-    defer src_dir.close(io);
-    var iterator = src_dir.iterate();
-
-    while (try iterator.next(io)) |entry| {
-        const file_name = entry.name;
-        std.log.debug("file name: {s}\n", .{file_name});
+fn increase(io: std.Io, mutex: *std.Io.Mutex) !void {
+    var index: usize = 0;
+    while (index < 100000) : (index += 1) {
+        try mutex.lock(io);
+        count += 1;
+        mutex.unlock(io);
     }
+}
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+    var mutex = std.Io.Mutex.init;
+    const thread_1 = try std.Thread.spawn(.{}, increase, .{ io, &mutex });
+    const thread_2 = try std.Thread.spawn(.{}, increase, .{ io, &mutex });
+    thread_1.join();
+    thread_2.join();
+    std.debug.print("count: {any}\n", .{count});
 }
