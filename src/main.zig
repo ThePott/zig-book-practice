@@ -2,35 +2,11 @@ const std = @import("std");
 const expect = std.testing.expect;
 const Allocator = std.mem.Allocator;
 
-var count = std.atomic.Value(usize).init(0);
-
-fn print() void {
-    const current = count.load(.seq_cst);
-    std.debug.print("count: {any}\n", .{current});
-}
-
-fn printInLoop() !void {
-    while (true) {
-        print();
-    }
-}
-
-fn incrementInLoop() !void {
-    for (0..100000) |_| {
-        _ = count.fetchAdd(1, .seq_cst);
-    }
-}
-
 pub fn main() !void {
-    const thread_1 = try std.Thread.spawn(.{}, printInLoop, .{});
-    const thread_2 = try std.Thread.spawn(.{}, printInLoop, .{});
-    const thread_3 = try std.Thread.spawn(.{}, printInLoop, .{});
-    const thread_4 = try std.Thread.spawn(.{}, incrementInLoop, .{});
-    const thread_5 = try std.Thread.spawn(.{}, incrementInLoop, .{});
-    thread_1.detach();
-    thread_2.detach();
-    thread_3.detach();
-    thread_4.join();
-    thread_5.join();
-    std.debug.print("count result: {any}\n", .{count});
+    const array_1 = [_]u8{ 1, 2, 3, 4 };
+    const array_2 = [_]u8{ 1, 2, 3, 4 };
+    const vector_1: @Vector(4, u8) = array_1;
+    const vector_2: @Vector(2, u8) = array_2[0..2].*;
+    std.debug.print("vector 1: {any}\n", .{vector_1});
+    std.debug.print("vector 2: {any}\n", .{vector_2});
 }
